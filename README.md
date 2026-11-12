@@ -1,32 +1,60 @@
-# CloudTier Storage Tiering SDK
+# CloudTier Storage Tiering Filter Driver SDK
+
+[![Platform](https://img.shields.io/badge/Platform-Windows-blue.svg)](https://www.easefilter.com/cloud/cloudtier-storage-tiering-sdk.htm)
+[![Languages](https://img.shields.io/badge/Languages-C%23%20%7C%20C%2B%2B%20%7C%20Java%20%7C%20Python%20%7C%20Go%20%7C%20Rust-brightgreen.svg)](https://www.easefilter.com/cloud/cloudtier-storage-tiering-sdk.htm)
+
+The **CloudTier Storage Tiering Filter Driver SDK** by EaseFilter is a comprehensive Hierarchical Storage Management (HSM) development kit. It provides a robust, kernel-level framework designed to implement transparent data migration between high-cost (hot) local storage and low-cost (cold) remote storage media (like AWS S3, Azure Blob, or secondary NAS).
+
+By seamlessly replacing migrated files with **Stub Files**, the SDK enables organizations to optimize storage efficiency, reduce CapEx/OpEx, and enforce data lifecycles—all without disrupting existing end-user applications or changing how files appear in Windows Explorer.
 A storage tiering example was implemented with CloudTier Storage Tiering SDK. The CloudTier Storage Tiering SDK provides you a simple solution to develop the cloud archiving software, it allows you to integrate your existing on-premises applications with the remote cloud storage infrastructure in a seamless, secure, and transparent fashion. The cloud tiering is a data storage technique which automatically moves data between high-cost on-premise storage and low-cost remote cloud storage, it provides a native cloud storage tier, it allows you to free up on-premise storage capacity, by moving out cooler data to the cloud storage, thereby reducing capital and operational expenditures.
 
-![loudTier Storage Tiering Architecture](https://www.easefilter.com/images/CloudTiering.png)
+![loudTier Storage Tiering Architecture](https://www.easefilter.com/images/cloudtier-storage-tiering-architecture.jpg)
 
-# Cloud Archiving Solution for Unstructured Data
+## 🚀 Key Features
 
-Cloud archiving is the process of moving data to secondary storage in the cloud, the potential benefits of cloud archiving include lower costs and easier access, no interruption and change to your existing applications and infrastructure. Automatically archive, manage and secure all your organization’s files to the cloud, transparently access your archived
+*   **Transparent Stub Files:** Migrated files are replaced with sparse files (stubs) tagged with reparse points. They consume zero local disk space but retain 100% of the original metadata (name, size, timestamps, ACLs).
+*   **Block-Level Archive Recall (Hydration):** Optimized for high performance and low egress costs. If an application requests only a specific byte-range of a massive file, the driver fetches only the required blocks on-demand, not the entire file.
+*   **Storage Provider Agnostic:** The kernel driver manages local NTFS/ReFS blocks, leaving the cloud provider logic to you. Easily integrate with **Amazon S3, Microsoft Azure Blob Storage, Google Cloud Storage**, or any on-premise object storage.
+*   **Policy-Driven Migration:** Automate tiering based on access frequency (e.g., `LastAccessTime`), file size, extension, or custom application tags.
+*   **WORM & Compliance Readiness:** Native support for "Write Once Read Many" workflows to meet regulatory standards like HIPAA, FINRA, and GDPR.
 
-![loudTier Storage Tiering Solution](https://www.easefilter.com/images/CloudTier.png)
+---
 
-## CloudTier example is a simple C# Windows forms application, to demo how to use the transparent storage tiering SDK. 
+## 💡 Common Use Cases
+
+*   **Enterprise File Archival:** Automatically offload old medical imaging (DICOM), media assets, or logs to cloud storage after 30+ days of inactivity. When a user opens the file, it streams instantly.
+*   **Infinite Local File Systems:** Present petabytes of cloud object storage as a standard local drive letter to legacy applications that only understand NTFS.
+*   **Disaster Recovery (DR):** Keep light, metadata-rich stubs on-premise while the bulk of the data is safely secured and versioned in the cloud.
+
+---
+
+## CloudTier S3 Intelligent-Tiering Demo 
+This C# demo project demonstrates how to connect Amazon S3 Intelligent-Tiering as a secondary storage tier for on-premises storage using the **CloudTier Storage Tiering SDK**. 
+
+The CloudTier SDK enables Hierarchical Storage Management (HSM) by automatically tiering infrequently used on-premises data to cost-effective S3 storage, and moving it back transparently when accessed by local applications.
 The example can generate some stub files. To handle the read request of the stub file, we need to register the callback function for the file system filter driver. When the stub file was accessed, the callback function will be invoked, the callback function will retrieve the data from the remote server and send back to the filter driver.
+![loudTier Storage Tiering Architecture](https://www.easefilter.com/images/cloudtier-s3-architecture.jpg)
 
-## How to run the CloudTier demo?
+### Key Features
 
-1.	Create the stub files first, go to tools->create stub test files.
-	By creating the stub file, you can move out your data to low-cost remote storage, 
-        
-2.	The test source folder stores the file data to simulate the remote host server. 
-	You can store your source file data anywhere, i.e. Amazon s3, Azure storage or your own private cloud storage.
+* **Transparent File Access:** Local applications can read/write to S3 objects without knowing the files are stored in the cloud.
+* **Stub File Technology:** Replaces local files with 0-byte "stub files" that retain all original metadata, attributes, and security permissions.
+* **Automated Data Recall:** When a stub file is accessed, the SDK automatically downloads the required data from S3 to a local cache and serves it to the application.
+* **Customizable Filter Driver:** Granular control over process exclusions, connection threads, timeouts, and cache management.
+* **Built-in S3 Explorer:** Includes a UI to browse S3 buckets, upload/download files, and generate stub files on your local drive.
 
-3.	The test stub file folder stores the test stub files.
-	The stub file doesn't take the storage space, it only keeps the meta data you created.
+### Architecture & How It Works
 
-4.	After the stub files were created, start the filter service. The stub files can be read as a regular file, when you open the stub file, 
-	all data will read from the source file by the demo application.
+This solution is built on a File System Filter Driver. Here is the lifecycle of a tiered file:
 
-5.	For demo purpose, the new stub file’s reparse point tag always pointing to the source file, you can change it to your remote sever, or in the cloud.
+1. **Tiering:** A physical file on the local server is uploaded to Amazon S3.
+2. **Stubbing:** The local physical file is replaced by a **Stub File**.
+   * *A stub file acts exactly like the regular file. It maintains the file size, creation time, last write time, and security descriptors, but it consumes 0 bytes of physical disk space.*
+3. **Recall (Read Request):** An application attempts to read the stub file.
+4. **Interception:** The CloudTier Filter Driver intercepts the read request.
+5. **Retrieval:** The requested data is retrieved from S3 to a local cache folder.
+6. **Completion:** The data is returned to the application seamlessly.
+
 
 ## EaseFilter File System Filter Driver SDK Reference
 | Product Name | Description |
@@ -67,6 +95,17 @@ The example can generate some stub files. To handle the read request of the stub
 * [Filter Driver Developer Guide](https://www.easefilter.com/kb/DeveloperGuide.htm)
 * [MiniFilter Filter Driver Framework](https://www.easefilter.com/kb/minifilter-framework.htm)
 * [Isolation Filter Driver](https://www.easefilter.com/kb/Isolation_Filter_Driver.htm)
+
+## License
+
+This repository contains two distinct licensing categories:
+
+1. **Wrapper/Implementation Code (MIT License):** 
+   The source code, scripts, and configuration files provided directly in this repository are licensed under the [MIT License](LICENSE). You are free to modify, distribute, and use this specific integration code.
+
+2. **EaseFilter SDK (Commercial License):**
+   This project requires the EaseFilter SDK (including its binaries, filter drivers, and core libraries) to function. The EaseFilter SDK is **proprietary commercial software** and is strictly excluded from the MIT License.   
+   To use the EaseFilter SDK for commercial purposes or in a production environment, you must obtain a valid commercial license directly from [EaseFilter](https://www.easefilter.com/license.pdf).
 
 ## Support
 If you have questions or need help, please contact support@easefilter.com 
