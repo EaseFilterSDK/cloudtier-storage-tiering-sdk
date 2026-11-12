@@ -28,7 +28,7 @@ A storage tiering example was implemented with CloudTier Storage Tiering SDK. Th
 
 ---
 
-## CloudTier S3 Intelligent-Tiering Demo 
+## 🏗️ A CloudTier S3 Intelligent-Tiering Example 
 This C# demo project demonstrates how to connect Amazon S3 Intelligent-Tiering as a secondary storage tier for on-premises storage using the **CloudTier Storage Tiering SDK**. 
 
 The CloudTier SDK enables Hierarchical Storage Management (HSM) by automatically tiering infrequently used on-premises data to cost-effective S3 storage, and moving it back transparently when accessed by local applications.
